@@ -1,4 +1,5 @@
 net.Receive("SortingHat_Sound", function()
+    -- The player can hear it, the distance, or other players have not been tested
     local ent = net.ReadEntity()
     local soundPath = net.ReadString()
 
