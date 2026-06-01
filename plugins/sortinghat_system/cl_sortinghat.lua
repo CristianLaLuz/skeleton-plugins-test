@@ -1,5 +1,4 @@
 net.Receive("SortingHat_Sound", function()
-    -- The player can hear it, the distance, or other players have not been tested
     local ent = net.ReadEntity()
     local soundPath = net.ReadString()
 
@@ -7,15 +6,10 @@ net.Receive("SortingHat_Sound", function()
 
     local dist = LocalPlayer():GetPos():Distance(ent:GetPos())
 
-    if dist > 750 then
+    -- max distance for hearing the sound
+    if dist > 1000 then
         return
     end
 
-    local volume = 1
-
-    if dist > 500 then
-        volume = 1 - ((dist - 500) / 250)
-    end
-
-    sound.Play(soundPath, ent:GetPos(), 75, 100, volume)
+    sound.Play(soundPath, ent:GetPos(), 85, 100, 1)
 end)
