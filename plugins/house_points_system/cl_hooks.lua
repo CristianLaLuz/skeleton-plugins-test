@@ -2,18 +2,27 @@ net.Receive("ixHousePointsUpdate", function()
     ixHousePoints = net.ReadTable()
 end)
 
-local function GetHouseColor(name)
-    local faction = ix.faction.Get(string.lower(name))
-    if faction and faction.color then
-        return faction.color
-    end
+local function GetHouseFaction(key)
+    return ix.faction.Get(string.lower(key))
+end
 
-    return Color(255, 255, 255)
+local function GetHouseName(key)
+    local faction = GetHouseFaction(key)
+
+    return faction and faction.name or key
+end
+
+local function GetHouseColor(key)
+    local faction = GetHouseFaction(key)
+
+    return faction and faction.color or color_white
 end
 
 local PANEL = {}
+local HOUSES = {"gryffindor", "slytherin", "ravenclaw", "hufflepuff"}
 
 function PANEL:Init()
+    -- TODO: care size, test in other resolutions
     self:SetSize(400, 300)
     self:Center()
     self:MakePopup()
@@ -50,14 +59,14 @@ end
 function PANEL:Build()
     self.list:Clear()
 
-    local function AddRow(name, color)
+    local function AddRow(key, displayName, color)
         local row = self.list:Add("DPanel")
         row:SetTall(40)
 
         function row:Paint(w, h)
             draw.RoundedBox(6, 0, 0, w, h, Color(30, 30, 30))
             draw.SimpleText(
-                name .. ": " .. (ixHousePoints[name] or 0),
+                displayName .. ": " .. (ixHousePoints[key] or 0),
                 "DermaDefaultBold",
                 10, 12,
                 color
@@ -83,7 +92,7 @@ function PANEL:Build()
                 local amount = math.floor(amountInput:GetValue())
 
                 net.Start("ixHousePointsModify")
-                    net.WriteString(name)
+                    net.WriteString(key)
                     net.WriteInt(amount, 16)
                 net.SendToServer()
             end
@@ -96,7 +105,7 @@ function PANEL:Build()
                 local amount = math.floor(amountInput:GetValue())
 
                 net.Start("ixHousePointsModify")
-                    net.WriteString(name)
+                    net.WriteString(key)
                     net.WriteInt(-amount, 16)
                 net.SendToServer()
             end
@@ -105,11 +114,8 @@ function PANEL:Build()
         self.list:AddItem(row)
     end
 
-    -- Revise this
-    local houses = {"gryffindor", "slytherin", "ravenclaw", "hufflepuff"}
-
-    for _, name in ipairs(houses) do
-        AddRow(name, GetHouseColor(name))
+    for _, key in ipairs(HOUSES) do
+        AddRow(key, GetHouseName(key), GetHouseColor(key))
     end
 end
 
@@ -124,21 +130,17 @@ end
 vgui.Register("ixHousePointsPanel", PANEL, "DFrame")
 
 hook.Add("Think", "ixHousePointsF2", function()
-    if not input.IsKeyDown(KEY_F2) then return end
-
-    if not ix._f2Pressed then
-        ix._f2Pressed = true
-
-        if IsValid(ix.housePointsPanel) then
-            ix.housePointsPanel:Remove()
-        else
-            ix.housePointsPanel = vgui.Create("ixHousePointsPanel")
-        end
-    end
-end)
-
-hook.Add("Think", "ixHousePointsF2Reset", function()
     if not input.IsKeyDown(KEY_F2) then
         ix._f2Pressed = false
+        return
+    end
+
+    if ix._f2Pressed then return end
+    ix._f2Pressed = true
+
+    if IsValid(ix.housePointsPanel) then
+        ix.housePointsPanel:Remove()
+    else
+        ix.housePointsPanel = vgui.Create("ixHousePointsPanel")
     end
 end)

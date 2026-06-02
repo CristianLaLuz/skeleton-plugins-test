@@ -1,42 +1,38 @@
 -- Save points
 
 util.AddNetworkString("ixHousePointsUpdate")
+util.AddNetworkString("ixHousePointsModify")
+util.AddNetworkString("ixHousePointsReset")
 
+local DEFAULT_HOUSE_POINTS = {
+    gryffindor = 0,
+    slytherin = 0,
+    ravenclaw = 0,
+    hufflepuff = 0
+}
 
 function PLUGIN:InitializedPlugins()
-    self.houses = ix.data.Get("housePoints", {
-        gryffindor = 0,
-        slytherin = 0,
-        ravenclaw = 0,
-        hufflepuff = 0
-    })
+    self.houses = ix.data.Get("housePoints", table.Copy(DEFAULT_HOUSE_POINTS))
 end
-
 
 function PLUGIN:SyncHousePoints()
     net.Start("ixHousePointsUpdate")
         net.WriteTable(self.houses)
-        net.Broadcast()
-    end
+    net.Broadcast()
+end
 
-    function PLUGIN:SaveHousePoints()
-        ix.data.Set("housePoints", self.houses)
-        self:SyncHousePoints()
-    end
+function PLUGIN:SaveHousePoints()
+    ix.data.Set("housePoints", self.houses)
+    self:SyncHousePoints()
+end
 
-    function PLUGIN:PlayerInitialSpawn(client)
-        net.Start("ixHousePointsUpdate")
+function PLUGIN:PlayerInitialSpawn(client)
+    net.Start("ixHousePointsUpdate")
         net.WriteTable(self.houses)
-        net.Send(client)
-    end
-
-
+    net.Send(client)
+end
 
 -- Modify points
-
-
-util.AddNetworkString("ixHousePointsModify")
-util.AddNetworkString("ixHousePointsReset")
 
 net.Receive("ixHousePointsModify", function(_, ply)
     if not ix.config.Get("canModifyHousePoints", false) then return end
@@ -49,10 +45,7 @@ net.Receive("ixHousePointsModify", function(_, ply)
     amount = math.Clamp(amount, -100, 100)
 
     local plugin = ix.plugin.Get("house_points_system")
-    if not plugin.houses then return end
-    if not plugin.houses[house] then return end
-
-    amount = math.Clamp(amount, -100, 100)
+    if not plugin or not plugin.houses or plugin.houses[house] == nil then return end
 
     plugin.houses[house] = math.max(0, plugin.houses[house] + amount)
 
@@ -69,12 +62,7 @@ net.Receive("ixHousePointsReset", function(len, ply)
     local plugin = ix.plugin.Get("house_points_system")
     if not plugin then return end
 
-    plugin.houses = {
-        gryffindor = 0,
-        slytherin = 0,
-        ravenclaw = 0,
-        hufflepuff = 0
-    }
+    plugin.houses = table.Copy(DEFAULT_HOUSE_POINTS)
 
     plugin:SaveHousePoints()
 end)
