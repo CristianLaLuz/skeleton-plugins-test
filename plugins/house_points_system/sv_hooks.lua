@@ -42,7 +42,7 @@ net.Receive("ixHousePointsModify", function(_, ply)
     local house = net.ReadString()
     local amount = net.ReadInt(16)
 
-    amount = math.Clamp(amount, -100, 100)
+    amount = math.Clamp(amount, -300, 300)
 
     local plugin = ix.plugin.Get("house_points_system")
     if not plugin or not plugin.houses or plugin.houses[house] == nil then return end
@@ -51,6 +51,17 @@ net.Receive("ixHousePointsModify", function(_, ply)
 
     -- Console print
     print(string.format("%s ha modificado los puntos de %s en %d. Total: %d", ply:Nick(), house, amount, plugin.houses[house]))
+
+    local faction = ix.faction.Get(string.lower(house))
+    local houseName = faction and faction.name or house
+
+    -- If add sound, think better use net
+    ix.chat.Send(ply, "pointsUpdate",
+        "La casa de " .. houseName .. " ha " .. (amount >= 0 and "ganado " or "perdido ") .. math.abs(amount) .. " puntos!",
+        false,
+        nil,
+        {house = house, amount = amount}
+    )
 
     plugin:SaveHousePoints()
 end)
