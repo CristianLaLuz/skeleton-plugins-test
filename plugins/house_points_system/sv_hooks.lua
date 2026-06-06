@@ -21,6 +21,7 @@ function PLUGIN:SyncHousePoints()
     net.Broadcast()
 end
 
+-- only saved on map, saved differently on server? bIgnoreMap?
 function PLUGIN:SaveHousePoints()
     ix.data.Set("housePoints", self.houses)
     self:SyncHousePoints()

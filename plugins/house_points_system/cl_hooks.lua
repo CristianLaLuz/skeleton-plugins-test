@@ -150,7 +150,7 @@ function PANEL:AddHouseCard(key)
         controls:DockMargin(16, 0, 16, 16)
         controls:SetPaintBackground(false)
 
-        -- Center panel
+        -- Add Center in controls panel
         local center = controls:Add("DPanel")
         card.center = center
         center:Dock(FILL)
@@ -240,11 +240,14 @@ function PANEL:PerformLayout()
 
     local gap = math.max(10, math.floor(screenWidth * 0.008))
     local cardWidth = math.floor((screenWidth - marginX * 2 - gap * (#HOUSES - 1)) / #HOUSES)
+    local sideMargin = math.floor(cardWidth * Lerp(math.Clamp((screenWidth - 1280) / 640, 0, 1), 0.13, 0.30))
 
     for index, card in ipairs(self.houseCards or {}) do
         card:SetWide(cardWidth)
         card:DockMargin(0, 0, index == #HOUSES and 0 or gap, 0)
-        card.center:DockMargin(cardWidth / 3, 0, cardWidth / 3, 0)
+        if IsValid(card.center) then
+            card.center:DockMargin(sideMargin, 0, sideMargin, 0)
+        end
     end
 
 end
